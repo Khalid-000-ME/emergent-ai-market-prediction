@@ -413,6 +413,10 @@ async def get_supported_cryptos():
         ]
     }
 
+# Add a handler for Vercel serverless functions
+def handler(request):
+    return app(request)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
