@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'https://emergent-ai-market-prediction.onrender.com';
 
 function App() {
   const [selectedCrypto, setSelectedCrypto] = useState('BTC');
