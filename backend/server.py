@@ -246,10 +246,10 @@ async def get_crypto_data(symbol: str):
         
         result = {
             "symbol": symbol.upper(),
-            "current_price": float(latest_data['4a. close (USD)']),
-            "open": float(latest_data['1a. open (USD)']),
-            "high": float(latest_data['2a. high (USD)']),
-            "low": float(latest_data['3a. low (USD)']),
+            "current_price": float(latest_data['4. close']),
+            "open": float(latest_data['1. open']),
+            "high": float(latest_data['2. high']),
+            "low": float(latest_data['3. low']),
             "volume": float(latest_data['5. volume']),
             "last_updated": latest_date
         }
