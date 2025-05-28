@@ -292,20 +292,21 @@ async def get_crypto_data(symbol: str):
     """Get current crypto data and basic info"""
     try:
         logger.info(f"Fetching crypto data for {symbol}")
-        logger.info(f"API Key available: {bool(ALPHA_VANTAGE_KEY)}")
         
         # Fetch current data
         data = await data_fetcher.fetch_crypto_data(symbol.upper())
-        logger.info(f"Received data keys: {list(data.keys()) if data else 'No data'}")
+        
+        # Handle rate limit error
+        if "error" in data:
+            raise HTTPException(status_code=429, detail="API rate limit exceeded. Please try again later.")
         
         if not data or 'Time Series (Digital Currency Daily)' not in data:
-            logger.error(f"Invalid data structure: {data}")
-            raise HTTPException(status_code=404, detail="Crypto data not found")
+            logger.error(f"Invalid data structure: {list(data.keys()) if data else 'No data'}")
+            raise HTTPException(status_code=404, detail="Crypto data not found or API limit exceeded")
         
         time_series = data['Time Series (Digital Currency Daily)']
         latest_date = max(time_series.keys())
         latest_data = time_series[latest_date]
-        logger.info(f"Latest data keys: {list(latest_data.keys())}")
         
         result = {
             "symbol": symbol.upper(),
@@ -319,9 +320,11 @@ async def get_crypto_data(symbol: str):
         
         return result
     
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error getting crypto data: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 @app.get("/api/predict/{symbol}")
 async def predict_crypto(symbol: str):
