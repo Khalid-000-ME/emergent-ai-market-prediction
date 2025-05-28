@@ -277,10 +277,10 @@ async def predict_crypto(symbol: str):
         for date, values in time_series.items():
             df_data.append({
                 'date': date,
-                'open': float(values['1a. open (USD)']),
-                'high': float(values['2a. high (USD)']),
-                'low': float(values['3a. low (USD)']),
-                'close': float(values['4a. close (USD)']),
+                'open': float(values['1. open']),
+                'high': float(values['2. high']),
+                'low': float(values['3. low']),
+                'close': float(values['4. close']),
                 'volume': float(values['5. volume'])
             })
         
