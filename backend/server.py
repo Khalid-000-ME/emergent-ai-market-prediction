@@ -120,7 +120,7 @@ class CryptoPredictionModel:
         """Prepare features for ML model"""
         feature_columns = [
             'SMA_7', 'SMA_21', 'EMA_12', 'EMA_26', 'RSI', 'MACD', 
-            'BB_width', 'open', 'high', 'low', 'volume'
+            'BB_width', 'Volume_SMA', 'open', 'high', 'low', 'volume'
         ]
         
         # Select available features
