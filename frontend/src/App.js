@@ -42,6 +42,33 @@ function App() {
       setError(null);
       const response = await fetch(`${API_BASE_URL}/api/crypto/${selectedCrypto}`);
       
+      if (response.status === 429) {
+        // Rate limit hit - try to use prediction history for current price
+        const historyResponse = await fetch(`${API_BASE_URL}/api/predictions/history/${selectedCrypto}`);
+        if (historyResponse.ok) {
+          const historyData = await historyResponse.json();
+          if (historyData.predictions && historyData.predictions.length > 0) {
+            const latestPrediction = historyData.predictions[0];
+            if (latestPrediction.prediction.current_price) {
+              setCryptoData({
+                symbol: selectedCrypto,
+                current_price: latestPrediction.prediction.current_price,
+                open: latestPrediction.prediction.current_price * 0.995, // Estimate
+                high: latestPrediction.prediction.current_price * 1.002, // Estimate
+                low: latestPrediction.prediction.current_price * 0.998, // Estimate
+                volume: 1000, // Placeholder
+                last_updated: latestPrediction.created_at.split('T')[0],
+                cached: true,
+                rate_limited: true
+              });
+              setError("Using cached data due to API rate limit. Upgrade API plan for real-time data.");
+              return;
+            }
+          }
+        }
+        throw new Error('API rate limit exceeded. Please try again later.');
+      }
+      
       if (!response.ok) {
         throw new Error('Failed to fetch crypto data');
       }
