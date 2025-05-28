@@ -50,9 +50,21 @@ class CryptoDataFetcher:
     def __init__(self):
         self.alpha_vantage_base = "https://www.alphavantage.co/query"
         self.news_api_base = "https://newsapi.org/v2/everything"
+        self.cache = {}  # Simple in-memory cache
+        self.cache_duration = 1800  # 30 minutes
     
     async def fetch_crypto_data(self, symbol: str) -> Dict:
-        """Fetch crypto data from Alpha Vantage"""
+        """Fetch crypto data from Alpha Vantage with caching"""
+        cache_key = f"crypto_{symbol}"
+        current_time = datetime.now().timestamp()
+        
+        # Check cache first
+        if cache_key in self.cache:
+            cached_data, timestamp = self.cache[cache_key]
+            if current_time - timestamp < self.cache_duration:
+                logger.info(f"Using cached data for {symbol}")
+                return cached_data
+        
         try:
             params = {
                 'function': 'DIGITAL_CURRENCY_DAILY',
@@ -64,13 +76,43 @@ class CryptoDataFetcher:
             async with aiohttp.ClientSession() as session:
                 async with session.get(self.alpha_vantage_base, params=params) as response:
                     data = await response.json()
+                    
+                    # Check if we hit rate limit
+                    if 'Information' in data and 'rate limit' in data['Information']:
+                        logger.warning(f"Alpha Vantage rate limit hit: {data['Information']}")
+                        # Try to use cached data even if expired
+                        if cache_key in self.cache:
+                            cached_data, _ = self.cache[cache_key]
+                            logger.info(f"Using expired cached data for {symbol}")
+                            return cached_data
+                        return {"error": "Rate limit exceeded"}
+                    
+                    # Cache successful response
+                    if 'Time Series (Digital Currency Daily)' in data:
+                        self.cache[cache_key] = (data, current_time)
+                    
                     return data
         except Exception as e:
             logger.error(f"Error fetching crypto data: {e}")
+            # Try to use cached data even if expired
+            if cache_key in self.cache:
+                cached_data, _ = self.cache[cache_key]
+                logger.info(f"Using expired cached data for {symbol} due to error")
+                return cached_data
             return {}
     
     async def fetch_crypto_news(self, symbol: str) -> List[Dict]:
-        """Fetch crypto news for sentiment analysis"""
+        """Fetch crypto news for sentiment analysis with caching"""
+        cache_key = f"news_{symbol}"
+        current_time = datetime.now().timestamp()
+        
+        # Check cache first
+        if cache_key in self.cache:
+            cached_data, timestamp = self.cache[cache_key]
+            if current_time - timestamp < self.cache_duration:
+                logger.info(f"Using cached news for {symbol}")
+                return cached_data
+        
         try:
             params = {
                 'q': f'{symbol} cryptocurrency',
@@ -83,9 +125,20 @@ class CryptoDataFetcher:
             async with aiohttp.ClientSession() as session:
                 async with session.get(self.news_api_base, params=params) as response:
                     data = await response.json()
-                    return data.get('articles', [])
+                    articles = data.get('articles', [])
+                    
+                    # Cache successful response
+                    if articles:
+                        self.cache[cache_key] = (articles, current_time)
+                    
+                    return articles
         except Exception as e:
             logger.error(f"Error fetching news: {e}")
+            # Try to use cached data even if expired
+            if cache_key in self.cache:
+                cached_data, _ = self.cache[cache_key]
+                logger.info(f"Using expired cached news for {symbol} due to error")
+                return cached_data
             return []
 
 class CryptoPredictionModel:
