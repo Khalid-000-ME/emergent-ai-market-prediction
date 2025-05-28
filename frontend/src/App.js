@@ -88,6 +88,20 @@ function App() {
       setLoading(true);
       const response = await fetch(`${API_BASE_URL}/api/predict/${selectedCrypto}`);
       
+      if (response.status === 429) {
+        // Rate limit hit - use existing prediction history
+        const historyResponse = await fetch(`${API_BASE_URL}/api/predictions/history/${selectedCrypto}`);
+        if (historyResponse.ok) {
+          const historyData = await historyResponse.json();
+          if (historyData.predictions && historyData.predictions.length > 0) {
+            setPrediction(historyData.predictions[0]);
+            setError("Showing latest cached prediction due to API rate limit.");
+            return;
+          }
+        }
+        throw new Error('API rate limit exceeded. Please try again later.');
+      }
+      
       if (!response.ok) {
         throw new Error('Failed to fetch prediction');
       }
