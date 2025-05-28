@@ -16,6 +16,10 @@ from sklearn.preprocessing import StandardScaler
 import uuid
 from textblob import TextBlob
 import ta
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
