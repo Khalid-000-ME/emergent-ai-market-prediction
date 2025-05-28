@@ -234,15 +234,21 @@ async def health_check():
 async def get_crypto_data(symbol: str):
     """Get current crypto data and basic info"""
     try:
+        logger.info(f"Fetching crypto data for {symbol}")
+        logger.info(f"API Key available: {bool(ALPHA_VANTAGE_KEY)}")
+        
         # Fetch current data
         data = await data_fetcher.fetch_crypto_data(symbol.upper())
+        logger.info(f"Received data keys: {list(data.keys()) if data else 'No data'}")
         
         if not data or 'Time Series (Digital Currency Daily)' not in data:
+            logger.error(f"Invalid data structure: {data}")
             raise HTTPException(status_code=404, detail="Crypto data not found")
         
         time_series = data['Time Series (Digital Currency Daily)']
         latest_date = max(time_series.keys())
         latest_data = time_series[latest_date]
+        logger.info(f"Latest data keys: {list(latest_data.keys())}")
         
         result = {
             "symbol": symbol.upper(),
