@@ -112,7 +112,7 @@ class CryptoPredictionModel:
         
         # Volume indicators
         if 'volume' in df.columns:
-            df['Volume_SMA'] = ta.volume.volume_sma(df['close'], df['volume'], window=20)
+            df['Volume_SMA'] = ta.trend.sma_indicator(df['volume'], window=20)
         
         return df
     
