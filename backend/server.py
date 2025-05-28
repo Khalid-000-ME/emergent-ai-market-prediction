@@ -316,7 +316,9 @@ async def predict_crypto(symbol: str):
         }
         
         # Store prediction in database
-        db.predictions.insert_one(result)
+        result_copy = result.copy()
+        result_copy["_id"] = result["prediction_id"]  # Use UUID as _id
+        db.predictions.insert_one(result_copy)
         
         return result
     
